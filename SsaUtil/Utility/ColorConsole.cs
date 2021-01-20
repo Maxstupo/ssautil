@@ -32,12 +32,12 @@
             this.output = output ?? Console.Out;
 
             LevelForegroundColors[Level.None] = ConsoleColor.White;
-            LevelForegroundColors[Level.Fine] = ConsoleColor.Green;
-            LevelForegroundColors[Level.Debug] = ConsoleColor.Blue;
+            LevelForegroundColors[Level.Fine] = ConsoleColor.Gray;
+            LevelForegroundColors[Level.Debug] = ConsoleColor.DarkGray;
             LevelForegroundColors[Level.Info] = ConsoleColor.White;
-            LevelForegroundColors[Level.Warn] = ConsoleColor.DarkYellow;
+            LevelForegroundColors[Level.Warn] = ConsoleColor.Red;
             LevelForegroundColors[Level.Error] = ConsoleColor.Red;
-            LevelForegroundColors[Level.Severe] = ConsoleColor.Red;
+            LevelForegroundColors[Level.Severe] = ConsoleColor.DarkRed;
 
             Push(ConsoleColor.Black, ConsoleColor.White);
         }
