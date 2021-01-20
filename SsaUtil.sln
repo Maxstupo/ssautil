@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30804.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SsaUtil", "SsaUtil\SsaUtil.csproj", "{0CD0F1F9-4694-4B71-B79B-74151B8165CE}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0CD0F1F9-4694-4B71-B79B-74151B8165CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0CD0F1F9-4694-4B71-B79B-74151B8165CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0CD0F1F9-4694-4B71-B79B-74151B8165CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0CD0F1F9-4694-4B71-B79B-74151B8165CE}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {46E4BFBE-D27E-4F4B-AED2-51F632A89F78}
+	EndGlobalSection
+EndGlobal
