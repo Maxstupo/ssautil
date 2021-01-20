@@ -44,8 +44,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Options.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Utility\ColorConsole.cs" />
+    <Compile Include="Utility\IOutput.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Subtitles\" />
