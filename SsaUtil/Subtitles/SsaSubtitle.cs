@@ -3,7 +3,7 @@
     using System;
     using System.Collections.Generic;
 
-    public class SsaSubtitle : IEquatable<SsaSubtitle> {
+    public class SsaSubtitle<S, E> : IEquatable<SsaSubtitle<S, E>> where S : SsaStyle where E : SsaEvent {
 
         [SsaProperty] public string ScaledBorderAndShadow { get; set; }
 
@@ -34,15 +34,15 @@
 
         [SsaProperty("YCbCr Matrix")] public string YCbCrMatrix { get; set; }
 
-        public Dictionary<string, SsaStyle> Styles { get; } = new Dictionary<string, SsaStyle>();
+        public Dictionary<string, S> Styles { get; } = new Dictionary<string, S>();
 
-        public List<SsaEvent> Events { get; } = new List<SsaEvent>();
+        public List<E> Events { get; } = new List<E>();
 
         public override bool Equals(object obj) {
-            return Equals(obj as SsaSubtitle);
+            return Equals(obj as SsaSubtitle<S, E>);
         }
 
-        public bool Equals(SsaSubtitle other) {
+        public bool Equals(SsaSubtitle<S, E> other) {
             return other != null &&
                    this.ScaledBorderAndShadow == other.ScaledBorderAndShadow &&
                    this.Title == other.Title &&
@@ -59,8 +59,8 @@
                    this.Timer == other.Timer &&
                    this.WrapStyle == other.WrapStyle &&
                    this.YCbCrMatrix == other.YCbCrMatrix &&
-                   EqualityComparer<Dictionary<string, SsaStyle>>.Default.Equals(this.Styles, other.Styles) &&
-                   EqualityComparer<List<SsaEvent>>.Default.Equals(this.Events, other.Events);
+                   EqualityComparer<Dictionary<string, S>>.Default.Equals(this.Styles, other.Styles) &&
+                   EqualityComparer<List<E>>.Default.Equals(this.Events, other.Events);
         }
 
         public override int GetHashCode() {
@@ -80,19 +80,18 @@
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.Timer);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.WrapStyle);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.YCbCrMatrix);
-            hashCode = hashCode * -1521134295 + EqualityComparer<Dictionary<string, SsaStyle>>.Default.GetHashCode(this.Styles);
-            hashCode = hashCode * -1521134295 + EqualityComparer<List<SsaEvent>>.Default.GetHashCode(this.Events);
+            hashCode = hashCode * -1521134295 + EqualityComparer<Dictionary<string, S>>.Default.GetHashCode(this.Styles);
+            hashCode = hashCode * -1521134295 + EqualityComparer<List<E>>.Default.GetHashCode(this.Events);
             return hashCode;
         }
 
-        public static bool operator ==(SsaSubtitle left, SsaSubtitle right) {
-            return EqualityComparer<SsaSubtitle>.Default.Equals(left, right);
+        public static bool operator ==(SsaSubtitle<S, E> left, SsaSubtitle<S, E> right) {
+            return EqualityComparer<SsaSubtitle<S, E>>.Default.Equals(left, right);
         }
 
-        public static bool operator !=(SsaSubtitle left, SsaSubtitle right) {
+        public static bool operator !=(SsaSubtitle<S, E> left, SsaSubtitle<S, E> right) {
             return !(left == right);
         }
-
     }
 
 }

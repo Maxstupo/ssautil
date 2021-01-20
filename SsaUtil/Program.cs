@@ -51,7 +51,8 @@
 
                 Output.WriteLine(Level.None, $"Parsing: {file}");
 
-                SsaSubtitle subtitle = Reader.ReadFrom(file);
+
+                SsaSubtitle<SsaStyle, SsaEvent> subtitle = Reader.ReadFrom(file);
                 if (CheckReaderErrors())
                     return -1;
 
@@ -59,6 +60,15 @@
                 Output.WriteLine(Level.Info, $"  - Title: {subtitle.Title}");
                 Output.WriteLine(Level.Info, $"  - # of Styles: {subtitle.Styles.Count}");
                 Output.WriteLine(Level.Info);
+
+
+
+                subtitle.Title = "Hello World";
+                subtitle.Styles.Values.FirstOrDefault().FontSize = 30;
+
+                SsaWriter sw = new SsaWriter();
+                sw.WriteTo("output-subs.ass", subtitle);
+
             }
 
             return 0;
@@ -85,7 +95,7 @@
 
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
-                args = new string[] { "edit", "--help" };
+                args = new string[] { "edit", "-i", @"input-subs.ass" };
 #endif
 
             Program program = new Program();

@@ -15,9 +15,9 @@
         Events = 3,
     }
 
-    public sealed class SsaReader : BaseSsaReader<SsaSubtitle, SsaStyle, SsaEvent> { }
+    public sealed class SsaReader : BaseSsaReader<SsaSubtitle<SsaStyle, SsaEvent>, SsaStyle, SsaEvent> { }
 
-    public abstract class BaseSsaReader<T, S, E> : IEnumerable<SsaError> where T : SsaSubtitle where S : SsaStyle where E : SsaEvent {
+    public class BaseSsaReader<T, S, E> : IEnumerable<SsaError> where T : SsaSubtitle<S, E> where S : SsaStyle where E : SsaEvent {
 
         protected string[] PropertySeparator { get; set; } = { ":" };
         protected string[] CsvSeparator { get; set; } = { "," };
