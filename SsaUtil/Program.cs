@@ -1,6 +1,8 @@
 ﻿namespace Maxstupo.SsaUtil {
 
     using System;
+    using System.Collections.Generic;
+    using System.IO;
     using System.Linq;
     using CommandLine;
     using Maxstupo.SsaUtil.Subtitles;
@@ -10,49 +12,88 @@
 
         private IOutput Output { get; } = new ColorConsole();
 
-        private void Init(BaseOptions options) {
+        private readonly SsaReader Reader = new SsaReader();
 
 
+        private HashSet<string> inputFiles;
 
+
+        private int? Init(BaseOptions options) {
+
+            inputFiles = options.Inputs.SelectMany(filepath => {
+                if (Directory.Exists(filepath)) {
+                    return Directory.EnumerateFiles(filepath, "*.ass", options.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+
+                } else if (Path.GetExtension(filepath).Equals(".ass", StringComparison.InvariantCultureIgnoreCase)) {
+                    return Enumerable.Repeat(filepath, 1);
+
+                } else {
+                    return Enumerable.Empty<string>();
+
+                }
+            }).ToHashSet();
+
+            if (inputFiles.Count == 0) {
+                Output.WriteLine(Level.Severe, "No input files specified! Use the &-e;-i&-^; option.");
+                return -1;
+            }
+
+            return null;
         }
 
         private int RunEdit(EditOptions options) {
+
+            foreach (string file in inputFiles) {
+                if (!File.Exists(file)) {
+                    Output.WriteLine(Level.Warn, $"File doesn't exist &-e;{file}&-^; Ignoring...");
+                    continue;
+                }
+
+                Output.WriteLine(Level.None, $"Parsing: {file}");
+
+                SsaSubtitle subtitle = Reader.ReadFrom(file);
+                if (CheckReaderErrors())
+                    return -1;
+
+
+                Output.WriteLine(Level.Info, $"  - Title: {subtitle.Title}");
+                Output.WriteLine(Level.Info, $"  - # of Styles: {subtitle.Styles.Count}");
+                Output.WriteLine(Level.Info);
+            }
 
             return 0;
         }
 
         private int RunInfo(InfoOptions options) {
 
-            SsaReader reader = new SsaReader();
+            Output.WriteLine(Level.Severe, "Info verb isn't implement yet!");
 
-            SsaSubtitle subtitle = reader.ReadFrom(@"example-subs.ass");
+            return -1;
+        }
 
-            if (reader.HasErrors) {
-                foreach (SsaError error in reader)
-                    Output.WriteLine(Level.Error, string.Format(error.Message, error.Args.Select(x => $"&-e;{x}&-^;").ToArray()));
+        private bool CheckReaderErrors() {
+            if (!Reader.HasErrors)
+                return false;
 
-                return -1;
-            }
+            foreach (SsaError error in Reader)
+                Output.WriteLine(Level.Error, $"  - {string.Format(error.Message, error.Args.Select(x => $"&-e;{x}&-^;").ToArray())}");
 
-            Output.WriteLine(Level.Info, $"Title: {subtitle.Title}");
-            Output.WriteLine(Level.Info, $"# of Styles: {subtitle.Styles.Count}");
-
-            return 0;
+            return true;
         }
 
         private static int Main(string[] args) {
 
 #if DEBUG
             if (System.Diagnostics.Debugger.IsAttached)
-                args = "info".Split(' ');
+                args = new string[] { "edit", "--help" };
 #endif
 
             Program program = new Program();
 
             return OnReturnCode(Parser.Default.ParseArguments<InfoOptions, EditOptions>(args)
                 .MapResult(
-                    (InfoOptions options) => { program.Init(options); return program.RunInfo(options); },
-                    (EditOptions options) => { program.Init(options); return program.RunEdit(options); },
+                    (InfoOptions options) => { int? code = program.Init(options); return code ?? program.RunInfo(options); },
+                    (EditOptions options) => { int? code = program.Init(options); return code ?? program.RunEdit(options); },
                     errors => -1
                 ));
         }
