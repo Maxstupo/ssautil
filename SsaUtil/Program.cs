@@ -1,7 +1,9 @@
 ﻿namespace Maxstupo.SsaUtil {
 
     using System;
+    using System.Linq;
     using CommandLine;
+    using Maxstupo.SsaUtil.Subtitles;
     using Maxstupo.SsaUtil.Utility;
 
     public sealed class Program {
@@ -9,10 +11,9 @@
         private IOutput Output { get; } = new ColorConsole();
 
         private void Init(BaseOptions options) {
-            Output.WriteLine(Level.Info, "Hello World");
-            Output.WriteLine(Level.Warn, "Hello World");
-            Output.WriteLine(Level.Severe, "Hello World");
-            Output.WriteLine(Level.Fine, "Hello World");
+
+
+
         }
 
         private int RunEdit(EditOptions options) {
@@ -21,6 +22,20 @@
         }
 
         private int RunInfo(InfoOptions options) {
+
+            SsaReader reader = new SsaReader();
+
+            SsaSubtitle subtitle = reader.ReadFrom(@"example-subs.ass");
+
+            if (reader.HasErrors) {
+                foreach (SsaError error in reader)
+                    Output.WriteLine(Level.Error, string.Format(error.Message, error.Args.Select(x => $"&-e;{x}&-^;").ToArray()));
+
+                return -1;
+            }
+
+            Output.WriteLine(Level.Info, $"Title: {subtitle.Title}");
+            Output.WriteLine(Level.Info, $"# of Styles: {subtitle.Styles.Count}");
 
             return 0;
         }
