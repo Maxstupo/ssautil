@@ -5,10 +5,10 @@
 
     public abstract class BaseOptions {
 
-        [Option('i', "input", HelpText = "<TODO>")]
+        [Option('i', "input", HelpText = "Directories and/or filepaths to SSA files that will be parsed. Directories will be scanned top level only unless -r switch is used. Only accepts *.ass files.")]
         public IEnumerable<string> Inputs { get; set; }
 
-        [Option('r', "recursive", HelpText = "<TODO>")]
+        [Option('r', "recursive", HelpText = "Scan the entire directory tree of all directory filepaths recursively.")]
         public bool Recursive { get; set; }
 
     }
