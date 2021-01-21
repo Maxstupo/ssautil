@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
+    using System.Reflection;
     using CommandLine;
     using Maxstupo.SsaUtil.Subtitles;
     using Maxstupo.SsaUtil.Utility;
@@ -12,10 +13,15 @@
 
         private IOutput Output { get; } = new ColorConsole();
 
-        private readonly SsaReader Reader = new SsaReader();
-
+        private readonly SsaReader reader = new SsaReader();
+        private readonly SsaWriter writer = new SsaWriter();
 
         private HashSet<string> inputFiles;
+
+        private Type scopeType;
+        private Dictionary<string, PropertyInfo> properties;
+
+        private readonly List<Setter> setters = new List<Setter>();
 
 
         private int? Init(BaseOptions options) {
@@ -24,54 +30,113 @@
                 if (Directory.Exists(filepath)) {
                     return Directory.EnumerateFiles(filepath, "*.ass", options.Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
 
-                } else if (Path.GetExtension(filepath).Equals(".ass", StringComparison.InvariantCultureIgnoreCase)) {
-                    return Enumerable.Repeat(filepath, 1);
-
                 } else {
-                    return Enumerable.Empty<string>();
+                    return Enumerable.Repeat(filepath, 1);
 
                 }
             }).ToHashSet();
 
             if (inputFiles.Count == 0) {
-                Output.WriteLine(Level.Severe, "No input files specified! Use the &-e;-i&-^; option.");
+                Output.WriteLine(Level.Severe, "No input files specified! Use the &-a;-i&-^; option.");
                 return -1;
             }
+
+            scopeType = options.ScopeStyles ? typeof(SsaStyle) : options.ScopeEvents ? typeof(SsaEvent) : typeof(SsaSubtitle<SsaStyle, SsaEvent>);
+            properties = SsaPropertyAttribute.GetSsaProperties(scopeType);
 
             return null;
         }
 
         private int RunEdit(EditOptions options) {
 
+            // Build setter list & validate property name existence.
+            foreach (string setter in options.Setters) {
+                string[] tokens = setter.Split(new string[] { "=" }, 2, StringSplitOptions.None);
+
+                if (properties.ContainsKey(tokens[0])) {
+                    setters.Add(new Setter(tokens[0], tokens[1]));
+
+                } else {
+                    Output.WriteLine(Level.Severe, $"Setter: Unknown property: &-e;{tokens[0]}&-^;");
+                    return -1;
+                }
+            }
+
+
             foreach (string file in inputFiles) {
                 if (!File.Exists(file)) {
-                    Output.WriteLine(Level.Warn, $"File doesn't exist &-e;{file}&-^; Ignoring...");
+                    Output.WriteLine(Level.Warn, $"File doesn't exist &-3;{file}&-^; Ignoring...");
                     continue;
                 }
 
-                Output.WriteLine(Level.None, $"Parsing: {file}");
+                Output.WriteLine(Level.None, $"Parsing: &-3;{file}&-^;");
 
 
-                SsaSubtitle<SsaStyle, SsaEvent> subtitle = Reader.ReadFrom(file);
-                if (CheckReaderErrors())
-                    return -1;
+                SsaSubtitle<SsaStyle, SsaEvent> subtitle = reader.ReadFrom(file);
+                if (options.IgnoreErrors || !CheckReaderErrors()) {
 
+                    // Setters
+                    if (setters.Count > 0) {
+                        if (!options.ScopeEvents && !options.ScopeStyles) { // Setter: Info
+                            if (!TryApplySetters(subtitle))
+                                return -1;
 
-                Output.WriteLine(Level.Info, $"  - Title: {subtitle.Title}");
-                Output.WriteLine(Level.Info, $"  - # of Styles: {subtitle.Styles.Count}");
-                Output.WriteLine(Level.Info);
+                        } else if (options.ScopeStyles) {
+                            foreach (SsaStyle style in subtitle.Styles.Values) { // Setter: Styles
+                                if (!TryApplySetters(style))
+                                    return -1;
+                            }
+                        } else {
+                            foreach (SsaEvent evt in subtitle.Events) { // Setter: Events
+                                if (!TryApplySetters(evt))
+                                    return -1;
+                            }
+                        }
+                    }
 
+                    Output.WriteLine(Level.Info, $"  - Title: &-e;{subtitle.Title}&-^;");
+                    Output.WriteLine(Level.Info, $"  - # of Styles: &-e;{subtitle.Styles.Count}&-^;");
+                    Output.WriteLine(Level.Info, $"  - # of Events: &-e;{subtitle.Events.Count}&-^;");
+                    Output.WriteLine(Level.Info);
 
+                    // Write modified subtitles.
+                    if (!string.IsNullOrWhiteSpace(options.Output)) {
 
-                subtitle.Title = "Hello World";
-                subtitle.Styles.Values.FirstOrDefault().FontSize = 30;
+                        string filepath = Path.Combine(options.Output, Path.GetFileName(file)).Replace('\\', '/');
 
-                SsaWriter sw = new SsaWriter();
-                sw.WriteTo("output-subs.ass", subtitle);
+                        Output.WriteLine(Level.Info, $"  - Writing modified subtitles: &-3;{filepath}&-^;");
+                        if (!options.Overwrite && File.Exists(filepath)) {
+                            Output.WriteLine(Level.Warn, "    - Skipping writing file. File exists! Use the &-a;--overwrite&-^; switch to allow.");
+                        } else {
+                            Directory.CreateDirectory(options.Output);
+                            writer.WriteTo(filepath, subtitle);
+                        }
+
+                    } else {
+                        Output.WriteLine(Level.Warn, "No output template specified (&-a;-o&-^;). Skipping writing subtitles...");
+                    }
+
+                } else {
+                    return -1; // reader errors occurred. 
+                }
 
             }
 
             return 0;
+        }
+
+        private bool TryApplySetters(object obj) {
+            foreach (Setter setter in setters) {
+
+                PropertyInfo info = properties[setter.PropertyName];
+
+                if (!SsaReader.TrySetProperty(obj, info, setter.Value)) {
+                    Output.WriteLine(Level.Severe, $"Setter: Invalid property value &-e;{setter.Value}&-^; for &-e;{setter.PropertyName}&-^;");
+                    return false;
+                }
+
+            }
+            return true;
         }
 
         private int RunInfo(InfoOptions options) {
@@ -82,10 +147,10 @@
         }
 
         private bool CheckReaderErrors() {
-            if (!Reader.HasErrors)
+            if (!reader.HasErrors)
                 return false;
 
-            foreach (SsaError error in Reader)
+            foreach (SsaError error in reader)
                 Output.WriteLine(Level.Error, $"  - {string.Format(error.Message, error.Args.Select(x => $"&-e;{x}&-^;").ToArray())}");
 
             return true;
