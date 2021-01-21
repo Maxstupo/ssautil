@@ -22,6 +22,7 @@
         private Dictionary<string, PropertyInfo> properties;
 
         private readonly List<Setter> setters = new List<Setter>();
+        private readonly List<Filter> filters = new List<Filter>();
 
 
         private int? Init(BaseOptions options) {
@@ -62,6 +63,25 @@
                 }
             }
 
+            // Build filter list & validate property name existence.
+            foreach (string filter in options.Filters) {
+                string[] tokens = filter.Split(new string[] { "=", "<", ">" }, 2, StringSplitOptions.None);
+
+                if (properties.ContainsKey(tokens[0])) {
+
+                    string[] values = tokens[1].Split(new string[] { "|" }, StringSplitOptions.RemoveEmptyEntries);
+
+                    Operator oper = filter.Contains("=") ? Operator.Equals : filter.Contains("<") ? Operator.LessThan : Operator.GreaterThan;
+
+
+                    filters.Add(new Filter(tokens[0], oper, values));
+
+                } else {
+                    Output.WriteLine(Level.Severe, $"Filter: Unknown property: &-e;{tokens[0]}&-^;");
+                    return -1;
+                }
+            }
+
 
             foreach (string file in inputFiles) {
                 if (!File.Exists(file)) {
@@ -78,16 +98,34 @@
                     // Setters
                     if (setters.Count > 0) {
                         if (!options.ScopeEvents && !options.ScopeStyles) { // Setter: Info
-                            if (!TryApplySetters(subtitle))
+                            bool filtered = DoFilter(subtitle, out bool hadError);
+
+                            if (hadError)
                                 return -1;
+
+                            if (!filtered)
+                                if (!TryApplySetters(subtitle))
+                                    return -1;
 
                         } else if (options.ScopeStyles) {
                             foreach (SsaStyle style in subtitle.Styles.Values) { // Setter: Styles
+                                bool filtered = DoFilter(style, out bool hadError);
+                                if (hadError)
+                                    return -1;
+                                if (filtered)
+                                    continue;
+
                                 if (!TryApplySetters(style))
                                     return -1;
                             }
                         } else {
                             foreach (SsaEvent evt in subtitle.Events) { // Setter: Events
+                                bool filtered = DoFilter(evt, out bool hadError);
+                                if (hadError)
+                                    return -1;
+                                if (filtered)
+                                    continue;
+
                                 if (!TryApplySetters(evt))
                                     return -1;
                             }
@@ -123,6 +161,70 @@
             }
 
             return 0;
+        }
+
+        private bool DoFilter(object obj, out bool hadError) {
+            hadError = false;
+
+            foreach (Filter filter in filters) {
+
+                PropertyInfo info = properties[filter.PropertyName];
+
+                bool isNumeric = info.PropertyType == typeof(float) || info.PropertyType == typeof(int);
+
+                object propertyValue = info.GetValue(obj);
+
+                float nValue = 0;
+                foreach (string v in filter.Values) {
+
+                    if (isNumeric && !float.TryParse(v, out nValue)) {
+                        Output.WriteLine(Level.Severe, $"Filter: User-defined value &-e;{v}&-^; isn't numeric for property &-e;{filter.PropertyName}&-^;");
+                        hadError = true;
+                        return false;
+                    }
+
+                    switch (filter.Operator) {
+                        case Operator.Equals:
+
+                            if (isNumeric) {
+                                if ((float) propertyValue == nValue)
+                                    return false;
+                            } else if (propertyValue.ToString() == v) {
+                                return false;
+                            }
+
+                            break;
+
+                        case Operator.LessThan:
+
+                            if (!isNumeric) {
+                                Output.WriteLine(Level.Severe, $"Filter: Invalid operator for non-numeric value!");
+                                hadError = true;
+                                return false;
+                            }
+
+                            if ((float) propertyValue < nValue)
+                                return false;
+
+                            break;
+
+                        case Operator.GreaterThan:
+                            if (!isNumeric) {
+                                Output.WriteLine(Level.Severe, $"Filter: Invalid operator for non-numeric value!");
+                                hadError = true;
+                                return false;
+                            }
+
+                            if ((float) propertyValue > nValue)
+                                return false;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+
+            return true;
         }
 
         private bool TryApplySetters(object obj) {
