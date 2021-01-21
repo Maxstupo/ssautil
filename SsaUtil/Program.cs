@@ -93,70 +93,70 @@
 
 
                 SsaSubtitle<SsaStyle, SsaEvent> subtitle = reader.ReadFrom(file);
-                if (options.IgnoreErrors || !CheckReaderErrors()) {
+                bool hasReaderErrors = CheckReaderErrors();
+                if (hasReaderErrors && !options.IgnoreErrors)
+                    return -1;
 
-                    // Setters
-                    if (setters.Count > 0) {
-                        if (!options.ScopeEvents && !options.ScopeStyles) { // Setter: Info
-                            bool filtered = DoFilter(subtitle, out bool hadError);
+                // Setters
+                if (setters.Count > 0) {
+                    if (!options.ScopeEvents && !options.ScopeStyles) { // Setter: Info
+                        bool filtered = DoFilter(subtitle, out bool hadError);
 
-                            if (hadError)
+                        if (hadError)
+                            return -1;
+
+                        if (!filtered)
+                            if (!TryApplySetters(subtitle))
                                 return -1;
 
-                            if (!filtered)
-                                if (!TryApplySetters(subtitle))
-                                    return -1;
+                    } else if (options.ScopeStyles) {
+                        foreach (SsaStyle style in subtitle.Styles.Values) { // Setter: Styles
+                            bool filtered = DoFilter(style, out bool hadError);
+                            if (hadError)
+                                return -1;
+                            if (filtered)
+                                continue;
 
-                        } else if (options.ScopeStyles) {
-                            foreach (SsaStyle style in subtitle.Styles.Values) { // Setter: Styles
-                                bool filtered = DoFilter(style, out bool hadError);
-                                if (hadError)
-                                    return -1;
-                                if (filtered)
-                                    continue;
+                            if (!TryApplySetters(style))
+                                return -1;
+                        }
+                    } else {
+                        foreach (SsaEvent evt in subtitle.Events) { // Setter: Events
+                            bool filtered = DoFilter(evt, out bool hadError);
+                            if (hadError)
+                                return -1;
+                            if (filtered)
+                                continue;
 
-                                if (!TryApplySetters(style))
-                                    return -1;
-                            }
-                        } else {
-                            foreach (SsaEvent evt in subtitle.Events) { // Setter: Events
-                                bool filtered = DoFilter(evt, out bool hadError);
-                                if (hadError)
-                                    return -1;
-                                if (filtered)
-                                    continue;
-
-                                if (!TryApplySetters(evt))
-                                    return -1;
-                            }
+                            if (!TryApplySetters(evt))
+                                return -1;
                         }
                     }
+                }
 
-                    Output.WriteLine(Level.Info, $"  - Title: &-e;{subtitle.Title}&-^;");
-                    Output.WriteLine(Level.Info, $"  - # of Styles: &-e;{subtitle.Styles.Count}&-^;");
-                    Output.WriteLine(Level.Info, $"  - # of Events: &-e;{subtitle.Events.Count}&-^;");
-                    Output.WriteLine(Level.Info);
+                Output.WriteLine(Level.Info, $"  - Title: &-e;{subtitle.Title}&-^;");
+                Output.WriteLine(Level.Info, $"  - # of Styles: &-e;{subtitle.Styles.Count}&-^;");
+                Output.WriteLine(Level.Info, $"  - # of Events: &-e;{subtitle.Events.Count}&-^;");
+                Output.WriteLine(Level.Info);
 
-                    // Write modified subtitles.
-                    if (!string.IsNullOrWhiteSpace(options.Output)) {
+                // Write modified subtitles.
+                if (!string.IsNullOrWhiteSpace(options.Output)) {
 
-                        string filepath = Path.Combine(options.Output, Path.GetFileName(file)).Replace('\\', '/');
+                    string filepath = Path.Combine(options.Output, Path.GetFileName(file)).Replace('\\', '/');
 
-                        Output.WriteLine(Level.Info, $"  - Writing modified subtitles: &-3;{filepath}&-^;");
-                        if (!options.Overwrite && File.Exists(filepath)) {
-                            Output.WriteLine(Level.Warn, "    - Skipping writing file. File exists! Use the &-a;--overwrite&-^; switch to allow.");
-                        } else {
-                            Directory.CreateDirectory(options.Output);
-                            writer.WriteTo(filepath, subtitle);
-                        }
-
+                    Output.WriteLine(Level.Info, $"  - Writing modified subtitles: &-3;{filepath}&-^;");
+                    if (!options.Overwrite && File.Exists(filepath)) {
+                        Output.WriteLine(Level.Warn, "    - Skipping writing file. File exists! Use the &-a;--overwrite&-^; switch to allow.");
                     } else {
-                        Output.WriteLine(Level.Warn, "No output template specified (&-a;-o&-^;). Skipping writing subtitles...");
+                        Directory.CreateDirectory(options.Output);
+                        writer.WriteTo(filepath, subtitle);
                     }
 
                 } else {
-                    return -1; // reader errors occurred. 
+                    Output.WriteLine(Level.Warn, "No output template specified (&-a;-o&-^;). Skipping writing subtitles...");
                 }
+
+
 
             }
 
