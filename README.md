@@ -10,9 +10,12 @@ ssautil allows for the bulk editing of SubStation Alpha subtitles.
 ## Typical Usage
 
 Bulk edit the fontsize and vertical margin for all styles called `main` and `italics` for all files located in `<dir>` and output modified copies to `./modified`<br/>
+<br/>
+
 `ssa edit -i "<dir>" -s --set Fontsize=50 MarginV=40 --filter "Name=main|italics" -o "./modified"`
 
 <br/>
+
 Use `ssa edit --help` for all available options.
 
 ## License
