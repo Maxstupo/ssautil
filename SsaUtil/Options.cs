@@ -12,10 +12,10 @@
         public bool Recursive { get; set; }
 
 
-        [Option('s', "styles", HelpText = "Set and scale options will be applied to the properties of the subtitle styles.")]
+        [Option('s', "styles", HelpText = "Modifier operations will be applied to the properties of the subtitle styles.")]
         public bool ScopeStyles { get; set; }
 
-        [Option('e', "events", HelpText = "Set and scale options will be applied to the properties of the subtitle events.")]
+        [Option('e', "events", HelpText = "Modifier operations will be applied to the properties of the subtitle events.")]
         public bool ScopeEvents { get; set; }
 
 
@@ -32,7 +32,7 @@
         [Option("set", HelpText = "Set subtitle properties within the current scope. See -s and -e switches.", Min = 1)]
         public IEnumerable<string> Setters { get; set; }
 
-        [Option("scale", HelpText = "Scale subtitle properties within the current scope. See -s and -e switches.", Min = 1)]
+        [Option("scale", HelpText = "Scale subtitle properties within the current scope. See -s and -e switches.", Min = 1, Hidden = true)]
         public IEnumerable<string> Scalars { get; set; }
 
         [Option("filter", HelpText = "Filter subtitle properties within the current scope. See -s and -e switches.", Min = 1)]
