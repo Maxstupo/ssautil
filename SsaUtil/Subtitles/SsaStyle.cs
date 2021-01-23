@@ -73,13 +73,16 @@
         [SsaProperty] public bool Underline { get; set; }
         [SsaProperty] public bool StrikeOut { get; set; }
 
+        /// <summary>Modifies the width of the font. [percent]</summary>
         [SsaProperty("ScaleX")] public float ScaleWidth { get; set; }
 
+        /// <summary>Modifies the height of the font. [percent]</summary>
         [SsaProperty("ScaleY")] public float ScaleHeight { get; set; }
 
+        /// <summary>Extra space between characters.</summary>
         [SsaProperty] public float Spacing { get; set; }
 
-        /// <summary>The origin of the rotation is defined by the alignment. [degrees]</summary>
+        /// <summary>The origin of the rotation is defined by <see cref="Alignment"/>. [degrees]</summary>
         [SsaProperty] public float Angle { get; set; }
 
 
@@ -175,7 +178,7 @@
             hashCode = hashCode * -1521134295 + this.ScaleHeight.GetHashCode();
             hashCode = hashCode * -1521134295 + this.Spacing.GetHashCode();
             hashCode = hashCode * -1521134295 + this.Angle.GetHashCode();
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.BorderStyle);
+            hashCode = hashCode * -1521134295 + this.BorderStyle.GetHashCode();
             hashCode = hashCode * -1521134295 + this.Outline.GetHashCode();
             hashCode = hashCode * -1521134295 + this.Shadow.GetHashCode();
             hashCode = hashCode * -1521134295 + this.Alignment.GetHashCode();
