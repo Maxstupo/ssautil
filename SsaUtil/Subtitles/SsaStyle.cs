@@ -88,18 +88,14 @@
 
         [SsaProperty] public BorderStyle BorderStyle { get; set; } = BorderStyle.OutlineDropShadow;
 
-        /// <summary>
-        /// If BorderStyle is <see cref="BorderStyle.OutlineDropShadow"/>, then this specifies the width of the outline around the text, in pixels.
-        /// <br/>Values may be 0, 1, 2, 3 or 4.
-        /// </summary>
-        [SsaProperty] public int Outline { get; set; }
+        /// <summary>If BorderStyle is <see cref="BorderStyle.OutlineDropShadow"/>, then this specifies the width of the outline around the text.</summary>
+        [SsaProperty] public float Outline { get; set; }
 
         /// <summary>
-        /// If BorderStyle is <see cref="BorderStyle.OutlineDropShadow"/>,  then this specifies the depth of the drop shadow behind the text, in pixels.
-        /// <br/>Values may be 0, 1, 2, 3 or 4. <br/><br/>
+        /// If BorderStyle is <see cref="BorderStyle.OutlineDropShadow"/>,  then this specifies the depth of the drop shadow behind the text.<br/>
         /// Drop shadow is always used in addition to an outline - SSA will force an outline of 1 pixel if no outline width is given.
         /// </summary>
-        [SsaProperty] public int Shadow { get; set; }
+        [SsaProperty] public float Shadow { get; set; }
 
         /// <summary>This sets how text is "justified" within the Left/Right onscreen margins, and also the vertical placing.</summary>
         [SsaProperty] public StyleAlignment Alignment { get; set; }
