@@ -1,5 +1,5 @@
 ﻿namespace Maxstupo.SsaUtil.Subtitles {
-   
+
     using System;
     using System.Collections.Generic;
 
@@ -37,16 +37,34 @@
         NorthEast = 9
     }
 
+    public enum BorderStyle : int {
+        OutlineDropShadow = 1,
+        OpaqueBox = 3,
+    }
+
     public class SsaStyle : IEquatable<SsaStyle> {
 
+        /// <summary>The name of the Style. Case sensitive. Cannot include commas.</summary>
         [SsaProperty] public string Name { get; set; }
 
+        /// <summary>The fontname as used by Windows. Case-sensitive.</summary>
         [SsaProperty("Fontname")] public string FontName { get; set; }
 
         [SsaProperty("Fontsize")] public float FontSize { get; set; }
 
+        /// <summary>This is the colour that a subtitle will normally appear in.</summary>
         [SsaProperty] public string PrimaryColour { get; set; }
+
+        /// <summary>
+        /// This colour may be used instead of the Primary colour when a subtitle is automatically shifted 
+        /// to prevent an onscreen collsion, to distinguish the different subtitles.
+        /// </summary>
         [SsaProperty] public string SecondaryColour { get; set; }
+
+        /// <summary>
+        /// This colour may be used instead of the Primary or Secondary colour when a subtitle is automatically shifted 
+        /// to prevent an onscreen collsion, to distinguish the different subtitles.
+        /// </summary>
         [SsaProperty] public string OutlineColour { get; set; }
         [SsaProperty] public string BackColour { get; set; }
 
@@ -60,19 +78,53 @@
         [SsaProperty("ScaleY")] public float ScaleHeight { get; set; }
 
         [SsaProperty] public float Spacing { get; set; }
+
+        /// <summary>The origin of the rotation is defined by the alignment. [degrees]</summary>
         [SsaProperty] public float Angle { get; set; }
 
-        [SsaProperty] public string BorderStyle { get; set; }
-        [SsaProperty] public float Outline { get; set; }
-        [SsaProperty] public float Shadow { get; set; }
 
+        [SsaProperty] public BorderStyle BorderStyle { get; set; } = BorderStyle.OutlineDropShadow;
+
+        /// <summary>
+        /// If BorderStyle is <see cref="BorderStyle.OutlineDropShadow"/>, then this specifies the width of the outline around the text, in pixels.
+        /// <br/>Values may be 0, 1, 2, 3 or 4.
+        /// </summary>
+        [SsaProperty] public int Outline { get; set; }
+
+        /// <summary>
+        /// If BorderStyle is <see cref="BorderStyle.OutlineDropShadow"/>,  then this specifies the depth of the drop shadow behind the text, in pixels.
+        /// <br/>Values may be 0, 1, 2, 3 or 4. <br/><br/>
+        /// Drop shadow is always used in addition to an outline - SSA will force an outline of 1 pixel if no outline width is given.
+        /// </summary>
+        [SsaProperty] public int Shadow { get; set; }
+
+        /// <summary>This sets how text is "justified" within the Left/Right onscreen margins, and also the vertical placing.</summary>
         [SsaProperty] public StyleAlignment Alignment { get; set; }
 
-
+        /// <summary>
+        /// This defines the Left Margin in pixels. It is the distance from the left-hand edge of the screen. 
+        /// The three onscreen margins (MarginL, MarginR, MarginV) define areas in which the subtitle text will be displayed.
+        /// </summary>
         [SsaProperty("MarginL")] public int LeftMargin { get; set; }
+
+        /// <summary>
+        /// This defines the Right Margin in pixels. It is the distance from the right-hand edge of the screen. 
+        /// The three onscreen margins (MarginL, MarginR, MarginV) define areas in which the subtitle text will be displayed.
+        /// </summary>
         [SsaProperty("MarginR")] public int RightMargin { get; set; }
+
+        /// <summary>
+        /// This defines the vertical Left Margin in pixels.<br/><br/>
+        /// For a subtitle, it is the distance from the bottom of the screen.<br/>
+        /// For a toptitle, it is the distance from the top of the screen.<br/>
+        /// For a midtitle, the value is ignored - the text will be vertically centred.
+        /// </summary>
         [SsaProperty("MarginV")] public int VerticalMargin { get; set; }
 
+        /// <summary>
+        /// This specifies the font character set or encoding and on multi-lingual Windows installations it provides access
+        /// to characters used in multiple than one languages.
+        /// </summary>
         [SsaProperty] public StyleEncoding Encoding { get; set; }
 
         public override bool Equals(object obj) {
