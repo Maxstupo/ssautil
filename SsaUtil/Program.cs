@@ -100,33 +100,30 @@
                 // Setters
                 if (setters.Count > 0) {
                     if (!options.ScopeEvents && !options.ScopeStyles) { // Setter: Info
-                        bool filtered = DoFilter(subtitle, out bool hadError);
+                        if (!IsFiltered(subtitle, out bool hadError)) {
+                            if (hadError)
+                                return -1;
 
-                        if (hadError)
-                            return -1;
-
-                        if (!filtered)
                             if (!TryApplySetters(subtitle))
                                 return -1;
+                        }
 
                     } else if (options.ScopeStyles) {
                         foreach (SsaStyle style in subtitle.Styles.Values) { // Setter: Styles
-                            bool filtered = DoFilter(style, out bool hadError);
+                            if (IsFiltered(style, out bool hadError))
+                                continue;
                             if (hadError)
                                 return -1;
-                            if (filtered)
-                                continue;
 
                             if (!TryApplySetters(style))
                                 return -1;
                         }
                     } else {
                         foreach (SsaEvent evt in subtitle.Events) { // Setter: Events
-                            bool filtered = DoFilter(evt, out bool hadError);
+                            if (IsFiltered(evt, out bool hadError))
+                                continue;
                             if (hadError)
                                 return -1;
-                            if (filtered)
-                                continue;
 
                             if (!TryApplySetters(evt))
                                 return -1;
@@ -163,68 +160,26 @@
             return 0;
         }
 
-        private bool DoFilter(object obj, out bool hadError) {
+        private bool IsFiltered(object obj, out bool hadError) {
             hadError = false;
 
             foreach (Filter filter in filters) {
 
                 PropertyInfo info = properties[filter.PropertyName];
 
-                bool isNumeric = info.PropertyType == typeof(float) || info.PropertyType == typeof(int);
-
                 object propertyValue = info.GetValue(obj);
 
-                float nValue = 0;
-                foreach (string v in filter.Values) {
+                bool isFiltered = filter.IsFiltered(propertyValue, out string errorMessage);
 
-                    if (isNumeric && !float.TryParse(v, out nValue)) {
-                        Output.WriteLine(Level.Severe, $"Filter: User-defined value &-e;{v}&-^; isn't numeric for property &-e;{filter.PropertyName}&-^;");
-                        hadError = true;
-                        return false;
-                    }
+                if (errorMessage != null) {
+                    hadError = true;
+                    return false;
+                } else if (isFiltered)
+                    return true;
 
-                    switch (filter.Operator) {
-                        case Operator.Equals:
-
-                            if (isNumeric) {
-                                if ((float) propertyValue == nValue)
-                                    return false;
-                            } else if (propertyValue.ToString() == v) {
-                                return false;
-                            }
-
-                            break;
-
-                        case Operator.LessThan:
-
-                            if (!isNumeric) {
-                                Output.WriteLine(Level.Severe, $"Filter: Invalid operator for non-numeric value!");
-                                hadError = true;
-                                return false;
-                            }
-
-                            if ((float) propertyValue < nValue)
-                                return false;
-
-                            break;
-
-                        case Operator.GreaterThan:
-                            if (!isNumeric) {
-                                Output.WriteLine(Level.Severe, $"Filter: Invalid operator for non-numeric value!");
-                                hadError = true;
-                                return false;
-                            }
-
-                            if ((float) propertyValue > nValue)
-                                return false;
-                            break;
-                        default:
-                            break;
-                    }
-                }
             }
 
-            return true;
+            return false;
         }
 
         private bool TryApplySetters(object obj) {
