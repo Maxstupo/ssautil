@@ -125,7 +125,7 @@
             hashCode = hashCode * -1521134295 + this.PlayResX.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.PlayResY);
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.Timer);
-            hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.WrapStyle);
+            hashCode = hashCode * -1521134295 + this.WrapStyle.GetHashCode();
             hashCode = hashCode * -1521134295 + EqualityComparer<string>.Default.GetHashCode(this.YCbCrMatrix);
             hashCode = hashCode * -1521134295 + EqualityComparer<Dictionary<string, S>>.Default.GetHashCode(this.Styles);
             hashCode = hashCode * -1521134295 + EqualityComparer<List<E>>.Default.GetHashCode(this.Events);
@@ -139,6 +139,7 @@
         public static bool operator !=(SsaSubtitle<S, E> left, SsaSubtitle<S, E> right) {
             return !(left == right);
         }
+
     }
 
 }
