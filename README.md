@@ -2,7 +2,7 @@
 
 <p float="left" align="left" width="100%">
  <img src="https://img.shields.io/github/license/Maxstupo/ssautil.svg" />
- <img src="https://img.shields.io/github/release/Maxstupo/ssautil.svg" />
+ <img src="https://img.shields.io/github/v/release/Maxstupo/ssautil?include_prereleases" />
 </p>
 
 ssautil allows for the bulk editing of SubStation Alpha subtitles.
